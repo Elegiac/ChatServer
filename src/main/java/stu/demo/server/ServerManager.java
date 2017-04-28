@@ -1,10 +1,10 @@
 package stu.demo.server;
 
-import stu.demo.server.message.Connection;
+import stu.demo.server.message.MessageManager;
 
 public class ServerManager {
 
 	public static void startup() {
-		Connection.startup();
+		MessageManager.startup();
 	}
 }
