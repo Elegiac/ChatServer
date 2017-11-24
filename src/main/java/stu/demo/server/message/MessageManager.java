@@ -24,46 +24,42 @@ public class MessageManager {
 
 	private static final Map<User, ChannelHandlerContext> USER_MAP = new HashMap<>();
 
-	static ReadWriteLock lock = new ReentrantReadWriteLock(); 
-	
-	
+	static ReadWriteLock lock = new ReentrantReadWriteLock();
+
 	static void userIntoGroup(User user, ChannelHandlerContext channel) {
 		lock.writeLock().lock();
-		
-		System.out.println("add user(" + user + ") into group");
+
+		System.out.println("用户(" + user + ") 加入在线用户组");
 		USER_MAP.put(user, channel);
-		
+
 		lock.writeLock().unlock();
 	}
 
 	static void userOffGroup(ChannelHandlerContext channel) {
 		lock.writeLock().lock();
-		
-		Iterator<Entry<User, ChannelHandlerContext>> it = USER_MAP.entrySet()
-				.iterator();
+
+		Iterator<Entry<User, ChannelHandlerContext>> it = USER_MAP.entrySet().iterator();
 		while (it.hasNext()) {
 			Entry<User, ChannelHandlerContext> entry = it.next();
 			if (entry.getValue() == channel) {
-				System.out.println("remove user(" + entry.getKey()
-						+ ") from group");
+				System.out.println("用户(" + entry.getKey() + ") 移除在线用户组");
 				it.remove();
 				break;
 			}
 		}
-		
+
 		lock.writeLock().unlock();
 	}
-	
+
 	static Set<User> allUserFromGroup(User user, ChannelHandlerContext channel) {
 		lock.readLock().lock();
-		
+
 		Set<User> users = USER_MAP.keySet();
-		
+
 		lock.readLock().unlock();
-		
+
 		return users;
 	}
-	
 
 	public static void startup() {
 		try {
