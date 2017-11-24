@@ -38,7 +38,6 @@ public class StringServerHandler extends SimpleChannelInboundHandler<String> {
 				result = (Login) login.generateFail("用户名/密码错误!");
 			}
 		}
-		System.out.println(result);
 
 		ctx.writeAndFlush(JsonUtil.objectToJson(result) + "\r\n");
 	}

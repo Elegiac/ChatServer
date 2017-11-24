@@ -29,7 +29,7 @@ public class MessageManager {
 	static void userIntoGroup(User user, ChannelHandlerContext channel) {
 		lock.writeLock().lock();
 
-		System.out.println("用户(" + user + ") 加入在线用户组");
+		System.err.println("用户(" + user + ") 加入在线用户组");
 		USER_MAP.put(user, channel);
 
 		lock.writeLock().unlock();
@@ -42,7 +42,7 @@ public class MessageManager {
 		while (it.hasNext()) {
 			Entry<User, ChannelHandlerContext> entry = it.next();
 			if (entry.getValue() == channel) {
-				System.out.println("用户(" + entry.getKey() + ") 移除在线用户组");
+				System.err.println("用户(" + entry.getKey() + ") 移除在线用户组");
 				it.remove();
 				break;
 			}
