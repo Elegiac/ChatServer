@@ -1,5 +1,11 @@
 package stu.demo.server.message;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import edu.demo.common.entity.User;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -7,36 +13,23 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import edu.demo.common.entity.User;
-
 public class MessageManager {
 	private static EventLoopGroup bossGroup = new NioEventLoopGroup();
 	private static EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-	private static final Map<User, ChannelHandlerContext> USER_MAP = new HashMap<>();
+	private static final ConcurrentHashMap<User, ChannelHandlerContext> USER_MAP = new ConcurrentHashMap<>();
 
-	static ReadWriteLock lock = new ReentrantReadWriteLock();
+	static ChannelHandlerContext getChannelByUser(User user) {
+		return USER_MAP.get(user);
+	}
 
 	static void userIntoGroup(User user, ChannelHandlerContext channel) {
-		lock.writeLock().lock();
 
 		System.err.println("用户(" + user + ") 加入在线用户组");
 		USER_MAP.put(user, channel);
-
-		lock.writeLock().unlock();
 	}
 
 	static void userOffGroup(ChannelHandlerContext channel) {
-		lock.writeLock().lock();
 
 		Iterator<Entry<User, ChannelHandlerContext>> it = USER_MAP.entrySet().iterator();
 		while (it.hasNext()) {
@@ -48,17 +41,20 @@ public class MessageManager {
 			}
 		}
 
-		lock.writeLock().unlock();
 	}
 
-	static Set<User> allUserFromGroup(User user, ChannelHandlerContext channel) {
-		lock.readLock().lock();
+	static Set<User> allUserFromGroup() {
 
-		Set<User> users = USER_MAP.keySet();
+		Set<User> result = USER_MAP.keySet();
 
-		lock.readLock().unlock();
+		return result;
+	}
 
-		return users;
+	static void sendMessageToAll(String message) {
+		for (Entry<User, ChannelHandlerContext> entry : USER_MAP.entrySet()) {
+			ChannelHandlerContext context = entry.getValue();
+			context.writeAndFlush(message + "\r\n");
+		}
 	}
 
 	public static void startup() {
@@ -69,7 +65,7 @@ public class MessageManager {
 			b.childHandler(new StringServerInitializer());
 
 			// 服务器绑定端口监听
-			ChannelFuture f = b.bind(8878).sync();
+			ChannelFuture f = b.bind(8888).sync();
 			// 监听服务器关闭监听
 			f.channel().closeFuture().sync();
 
